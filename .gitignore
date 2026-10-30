@@ -8,3 +8,4 @@ runs/
 *.mp4
 *.png
 *.log
+!assets/*

@@ -5,6 +5,11 @@ A from-scratch PyTorch implementation of the Dreamer 4 world model
 
 From a few real frames and a stream of controller actions, the model imagines the frames that follow.
 
+![Real game vs world model imagination](assets/mario_demo.gif)
+
+A held-out level 1-1 run. Left: the real game. Right: the world model, given only the first 8 real frames and then
+the same button presses, imagining every frame after that. [Full-quality MP4](assets/mario_demo.mp4).
+
 ## Layout
 
 ```
