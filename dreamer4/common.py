@@ -1,7 +1,7 @@
 """Data loading, configs and checkpoint helpers shared by the Dreamer 4 training scripts.
 
 Data format (any environment): <dir>/{split}_frames.npy uint8 (N, H, W, 3) and <dir>/{split}_meta.npz with
-`actions` (N,) int and `episode` (N,) int. If there is no eval split, episodes with id % 20 == 19 are held out.
+`actions` (N,) int and `episode` (N,) int, for both splits, train and eval.
 """
 import math
 import os
@@ -19,25 +19,18 @@ def log(*a):
 
 
 def load_split(data, split):
-    """frames memmap, actions, episode ids and a keep mask for a split"""
-    if (data / f"{split}_frames.npy").exists():
-        f = np.load(data / f"{split}_frames.npy", mmap_mode="r")
-        m = np.load(data / f"{split}_meta.npz")
-        e = m["episode"].astype(np.int64)
-        held_out = split == "train" and not (data / "eval_frames.npy").exists()
-        return f, m["actions"].astype(np.int64), e, (e % 20 != 19) if held_out else np.ones(len(f), bool)
-    f, a, e, _ = load_split(data, "train")
-    return f, a, e, e % 20 == 19
+    """frames memmap, actions and episode ids of a split"""
+    f = np.load(data / f"{split}_frames.npy", mmap_mode="r")
+    m = np.load(data / f"{split}_meta.npz")
+    return f, m["actions"].astype(np.int64), m["episode"].astype(np.int64)
 
 
-def starts(ep, keep, T):
-    """indices i such that frames i..i+T-1 are in one episode and in the split"""
+def starts(ep, T, keep=None):
+    """indices i such that frames i..i+T-1 are in one episode (and all in `keep`, if given)"""
     ok = np.zeros(len(ep), bool)
     ok[:len(ep) - T + 1] = ep[:len(ep) - T + 1] == ep[T - 1:]
-    ok &= keep
-    if T > 1:
-        ok[:len(ep) - T + 1] &= keep[T - 1:]
-    ok[len(ep) - T + 1:] = False
+    if keep is not None:
+        ok[:len(ep) - T + 1] &= keep[:len(ep) - T + 1] & keep[T - 1:]
     return np.nonzero(ok)[0]
 
 
@@ -64,11 +57,13 @@ def lr_at(i, steps, peak, warm=int(os.environ.get("WARM", 500))):
 
 
 def resume(model, opt, path, ema=None):
-    if path.exists():
-        ck = torch.load(path, map_location=dev)
-        model.load_state_dict(ck["model"]); opt.load_state_dict(ck["opt"])
-        if ema is not None and "ema" in ck:
-            ema.update(ck["ema"])
-        log(f"resumed {path} at step {ck['step']}")
-        return ck["step"]
-    return 0
+    """load model, optimizer (and EMA) from `path` and return its step; step 0 if there is no checkpoint yet"""
+    if not path.exists():
+        log(f"no checkpoint at {path}, starting from step 0")
+        return 0
+    ck = torch.load(path, map_location=dev)
+    model.load_state_dict(ck["model"]); opt.load_state_dict(ck["opt"])
+    if ema is not None:
+        ema.update(ck["ema"])
+    log(f"resumed {path} at step {ck['step']}")
+    return ck["step"]

@@ -92,6 +92,8 @@ class Tokenizer(nn.Module):
     def __init__(self, d=256, heads=8, enc_layers=8, dec_layers=8, channels=32, patch=8, group=2, hw=(128, 128),
                  bottleneck="tanh"):
         super().__init__()
+        if bottleneck not in ("tanh", "none"):
+            raise ValueError(f"bottleneck must be 'tanh' or 'none', got {bottleneck!r}")
         self.p, self.hw, self.g, self.bottleneck = patch, hw, group, bottleneck
         self.gh, self.gw = hw[0] // patch, hw[1] // patch
         self.np = self.gh * self.gw
@@ -210,7 +212,7 @@ def shortcut_forcing_loss(model, z1, act, boot_frac=0.25, single_frac=0.3):
             z_mid = torch.where(is_boot, zt + b1 * (half.float() / K)[..., None, None], zt)
             tau_mid_i = tau_i + half
             p2 = model(z_mid, tau_mid_i, kh, act, tm)
-            b2 = (p2 - z_mid) / (1 - (tau_mid_i.float() / K)[..., None, None]).clamp(min=1.0 / K)
+            b2 = (p2 - z_mid) / (1 - (tau_mid_i.float() / K)[..., None, None])  # tau_mid < 1 on the grid
             target = (b1 + b2) / 2
         v = (pred - zt) / (1 - tau)
         bl = ((1 - tau) ** 2 * (v - target) ** 2).mean((-1, -2), keepdim=True)

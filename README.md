@@ -21,7 +21,8 @@ envs/mario/          Super Mario Bros data and evaluation
 ```
 
 `dreamer4/` reads one packed format, so a new environment only has to write it:
-`{split}_frames.npy` uint8 (N, H, W, 3) and `{split}_meta.npz` with `actions` (N,) and `episode` (N,).
+`{split}_frames.npy` uint8 (N, H, W, 3) and `{split}_meta.npz` with `actions` (N,) and `episode` (N,), for both
+`train` and `eval`; a missing file is an error.
 
 ## Model
 
@@ -64,3 +65,7 @@ Training resumes from the last checkpoint if you rerun the same command.
 
 From 8 real frames, rollouts track the real game for about 2-4 s, then continue as a plausible but different part
 of the level. One step at a time, the imagined screen scrolls at the real speed (1.51 vs 1.49 px per frame).
+
+## License
+
+Apache License 2.0, see [LICENSE](LICENSE).

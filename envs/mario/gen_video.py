@@ -29,11 +29,9 @@ tok = Tokenizer(**ck["cfg"]).to(dev).eval(); tok.load_state_dict(ck["model"])
 ck = torch.load(run / "dyn.pt", map_location=dev)
 dyn = Dynamics(**ck["cfg"]).to(dev).eval(); dyn.load_state_dict(ck["ema"])
 
-split = "eval" if (data / "eval_frames.npy").exists() else "train"
-fr = np.load(data / f"{split}_frames.npy", mmap_mode="r")
-m = np.load(data / f"{split}_meta.npz")
+fr = np.load(data / "eval_frames.npy", mmap_mode="r")
+m = np.load(data / "eval_meta.npz")
 act, ep = m["actions"].astype(np.int64), m["episode"].astype(np.int64)
-held = np.ones(len(ep), bool) if split == "eval" else ep % 20 == 19
 prev = np.concatenate([[7], act[:-1]]); prev[np.diff(ep, prepend=-1) != 0] = 7
 
 
@@ -87,7 +85,7 @@ def up(im, s=3):
 
 # 1. real vs imagined play
 H = int(secs * 15)
-eps = [e for e in np.unique(ep[held]) if (ep == e).sum() > CTX + H + 1]
+eps = [e for e in np.unique(ep) if (ep == e).sum() > CTX + H + 1]
 e = eps[0]
 i0 = int(np.nonzero(ep == e)[0][0]) + 30
 real = np.asarray(fr[i0:i0 + CTX + H])
@@ -104,7 +102,7 @@ err = [np.abs(real[t].astype(float) - imag[t]).mean() for t in (CTX, CTX + 15, C
 print(f"play.mp4: episode {e}, {H} imagined frames; mean abs pixel error at +0/+1/+4 s/end: " + " ".join(f"{v:.1f}" for v in err))
 
 # 2. press A vs nothing, from 16 held-out moments
-idx = np.nonzero(held)[0]
+idx = np.arange(len(ep))
 pick = [i for i in idx[::max(1, len(idx) // 64)] if ep[i] == ep[min(i + CTX, len(ep) - 1)]][:16]
 diffs, rows = [], []
 for i in pick:

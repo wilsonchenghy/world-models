@@ -21,7 +21,7 @@ tok = Tokenizer(**ck["cfg"]).to(dev).eval()
 tok.load_state_dict(ck["model"])
 T = int(os.environ.get("CLIP", 8))
 
-for split in [sp for sp in ("train", "eval") if (data / f"{sp}_frames.npy").exists()]:
+for split in ("train", "eval"):
     fr = np.load(data / f"{split}_frames.npy", mmap_mode="r")
     mt = np.load(data / f"{split}_meta.npz")
     act, ep = mt["actions"].astype(np.int64), mt["episode"].astype(np.int64)

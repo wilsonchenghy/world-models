@@ -22,14 +22,13 @@ torch.backends.cuda.matmul.allow_tf32 = True
 g = torch.Generator().manual_seed(0)
 
 B, T = int(os.environ.get("BATCH", 16)), int(os.environ.get("SEQ", 32))
-parts = [sp for sp in ("train", "eval") if (run / f"latents_{sp}.npy").exists()]
-lat = torch.from_numpy(np.concatenate([np.load(run / f"latents_{sp}.npy") for sp in parts]).astype(np.float32))
-ms = [np.load(run / f"latents_{sp}_meta.npz") for sp in parts]
+# train and eval latents in one tensor; eval episode ids are offset so no sequence spans both
+lat = torch.from_numpy(np.concatenate([np.load(run / f"latents_{sp}.npy") for sp in ("train", "eval")]).astype(np.float32))
+ms = [np.load(run / f"latents_{sp}_meta.npz") for sp in ("train", "eval")]
 act = np.concatenate([m["actions"] for m in ms]).astype(np.int64)
 ep = np.concatenate([m["episode"] + 10 ** 6 * j for j, m in enumerate(ms)]).astype(np.int64)
-n_train = len(ms[0]["episode"])
-keep = (np.arange(len(ep)) < n_train) if len(parts) == 2 else (ep % 20 != 19)
-st, est = starts(ep, keep, T), starts(ep, ~keep, T)[::499][:32]
+is_train = np.arange(len(ep)) < len(ms[0]["episode"])
+st, est = starts(ep, T, is_train), starts(ep, T, ~is_train)[::499][:32]
 prev = torch.from_numpy(prev_actions(act, ep))
 log(f"dynamics: {len(st)} train sequences, {len(est)} eval; latent std {lat[:100000].std():.3f}")
 cfg = dyn_cfg(lat.shape[1], lat.shape[2])

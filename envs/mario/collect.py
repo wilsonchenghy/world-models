@@ -15,7 +15,7 @@ import warnings
 import cv2
 import numpy as np
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=DeprecationWarning)  # old gym API notices
 SKIP, MAX_STEPS = 4, 2000
 STAGES, STAGE_P = ["1-1", "1-2", "1-3", "1-4"], [0.4, 0.2, 0.2, 0.2]
 FORWARD = [1, 2, 4]  # right, right+A, right+A+B
@@ -53,7 +53,7 @@ def worker(args):
         name = f"w{wid:02d}_e{ep:04d}_{stage}.npz"
         split = "eval" if ep % 20 == 19 else "train"
         np.savez_compressed(os.path.join(out, split, name), frames=np.stack(frames), actions=np.array(actions, np.int32),
-                            life=np.array(lives, np.int8), x_pos=np.array(xs, np.int32), flag=bool(info.get("flag_get")))
+                            life=np.array(lives, np.int8), x_pos=np.array(xs, np.int32), flag=bool(info["flag_get"]))
         done_frames += len(frames); ep += 1
     return wid, done_frames, ep
 
