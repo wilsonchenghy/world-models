@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+data/
+runs/
+*.pt
+*.npy
+*.npz
+*.mp4
+*.png
+*.log
