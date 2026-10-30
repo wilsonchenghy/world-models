@@ -53,13 +53,14 @@ python -m envs.mario.gen_video data/packed runs/mario runs/mario/vid 30
 
 Training resumes from the last checkpoint if you rerun the same command.
 
-## Results so far (RTX 5070 Ti, 16 GB)
+## Results (RTX 5070 Ti, 16 GB)
 
 | | |
 | --- | --- |
 | Data | 1,003,384 frames, 2,571 episodes (levels 1-1 to 1-4), 5% held out |
-| Tokenizer | 38.25 dB PSNR on held-out frames after 40k steps (5.3 it/s, batch 16) |
-| Dynamics, 56k steps | 8-frame rollout latent MSE 0.017 vs 0.072 for copying the last frame (4.1 it/s, batch 8) |
+| Tokenizer | 38.25 dB PSNR on held-out frames after 40k steps (5.3 it/s, batch 16, ~2 h) |
+| Dynamics | 148k steps (4.1 it/s, batch 8, ~10 h); 8-frame rollout latent MSE 0.016 vs 0.072 for copying the last frame |
 | Generation | 4 steps per frame, faster than real time |
 
-Rollouts track the real game for about 2-4 s, then continue as a plausible but different part of the level.
+From 8 real frames, rollouts track the real game for about 2-4 s, then continue as a plausible but different part
+of the level. One step at a time, the imagined screen scrolls at the real speed (1.51 vs 1.49 px per frame).

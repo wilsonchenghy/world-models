@@ -45,7 +45,7 @@ class Block(nn.Module):
         hid = int(d * 8 / 3) // 64 * 64
         self.w12, self.w3 = nn.Linear(d, 2 * hid, bias=False), nn.Linear(hid, d, bias=False)
 
-    def forward(self, x, space_mask=None, time_mask=None):
+    def forward(self, x, time_mask=None):
         B, T, N, D = x.shape
         y = self.n1(x)
         if self.time:
@@ -62,7 +62,7 @@ class Block(nn.Module):
             y = F.scaled_dot_product_attention(q, k, v, attn_mask=m, is_causal=m is None, scale=1.0)
             y = y.transpose(1, 2).reshape(B, N, T, D).transpose(1, 2)
         else:
-            y = F.scaled_dot_product_attention(q, k, v, attn_mask=space_mask, scale=1.0)
+            y = F.scaled_dot_product_attention(q, k, v, scale=1.0)
             y = y.transpose(1, 2).reshape(B, T, N, D)
         x = x + self.o(y)
         a, b = self.w12(self.n2(x)).chunk(2, -1)
@@ -75,9 +75,9 @@ class Stack(nn.Module):
         self.blocks = nn.ModuleList([Block(d, heads, (i + 1) % time_every == 0) for i in range(layers)])
         self.norm = RMSNorm(d)
 
-    def forward(self, x, space_mask=None, time_mask=None):
+    def forward(self, x, time_mask=None):
         for b in self.blocks:
-            x = b(x, space_mask, time_mask)
+            x = b(x, time_mask)
         return self.norm(x)
 
 
@@ -89,7 +89,7 @@ class Tokenizer(nn.Module):
     that read the patches through attention. With our compute, learned latent tokens did not get past a blurry level
     average (16 dB PSNR) while the same transformer without them reached 29 dB."""
 
-    def __init__(self, d=256, heads=8, enc_layers=8, dec_layers=8, channels=16, patch=8, group=2, hw=(128, 128),
+    def __init__(self, d=256, heads=8, enc_layers=8, dec_layers=8, channels=32, patch=8, group=2, hw=(128, 128),
                  bottleneck="tanh"):
         super().__init__()
         self.p, self.hw, self.g, self.bottleneck = patch, hw, group, bottleneck
@@ -153,7 +153,7 @@ class Dynamics(nn.Module):
     """predicts clean latents z1 from corrupted latents, per-frame signal level tau, step size d and the action that
     led to each frame. Tokens per frame: L latent tokens, R registers, 1 (tau, d) token, 1 action token."""
 
-    def __init__(self, d=512, heads=8, layers=12, latents=32, channels=16, registers=4, actions=7, kmax=64):
+    def __init__(self, d=512, heads=8, layers=12, latents=64, channels=32, registers=4, actions=7, kmax=64):
         super().__init__()
         self.kmax, self.nsteps = kmax, int(math.log2(kmax)) + 1
         self.z_in = nn.Linear(channels, d)
@@ -173,7 +173,7 @@ class Dynamics(nn.Module):
         h = torch.cat([self.z_in(z) + self.pos_z, self.reg.expand(B, T, -1, -1),
                        (self.tau_emb(tau_i) + self.d_emb(k))[:, :, None],
                        (self.act_emb(act) + self.act_base)[:, :, None]], 2)
-        return self.out(self.tf(h, None, time_mask)[:, :, :self.L])
+        return self.out(self.tf(h, time_mask)[:, :, :self.L])
 
 
 def shortcut_forcing_loss(model, z1, act, boot_frac=0.25, single_frac=0.3):

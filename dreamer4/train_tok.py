@@ -25,7 +25,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 g = torch.Generator().manual_seed(0)
 
 B, T = int(os.environ.get("BATCH", 8)), int(os.environ.get("CLIP", 8))
-fr, act, ep, keep = load_split(data, "train")
+fr, _, ep, keep = load_split(data, "train")
 st = starts(ep, keep, T)
 efr, _, eep, ekeep = load_split(data, "eval")
 est = starts(eep, ekeep, T)[::997][:16]
