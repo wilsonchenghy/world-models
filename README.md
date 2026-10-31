@@ -51,7 +51,7 @@ python -m envs.mario.pack data/raw data/packed
 # model (needs torch with CUDA, lpips, imageio)
 BATCH=16 python -m dreamer4.train_tok data/packed runs/mario 40000
 python -m dreamer4.encode data/packed runs/mario
-BATCH=8 SEQ=32 python -m dreamer4.train_dyn data/packed runs/mario 148000
+BATCH=8 SEQ=32 python -m dreamer4.train_dyn data/packed runs/mario 50000
 
 # evaluation
 python -m envs.mario.gen_video data/packed runs/mario runs/mario/vid 30
@@ -66,6 +66,7 @@ Training resumes from the last checkpoint if you rerun the same command.
 | Data | 1,003,384 frames, 2,571 episodes (levels 1-1 to 1-4), 5% held out |
 | Tokenizer | 38.25 dB PSNR on held-out frames after 40k steps (5.3 it/s, batch 16, ~2 h) |
 | Dynamics | 148k steps (4.1 it/s, batch 8, ~10 h); 8-frame rollout latent MSE 0.016 vs 0.072 for copying the last frame |
+| Shorter run | 50k steps (~3.5 h) is nearly as good: rollout MSE stays at 0.014-0.025 (noisy, 32 sequences) from ~50k on, and video pixel error is about the same; the extra steps mainly strengthen the response to the jump button |
 | Generation | 4 steps per frame, faster than real time |
 
 From 8 real frames, rollouts track the real game for about 2-4 s, then continue as a plausible but different part
