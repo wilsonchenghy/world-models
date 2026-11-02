@@ -76,7 +76,7 @@ Training resumes from the last checkpoint if you rerun the same command.
 
 | | |
 | --- | --- |
-| Data | 1,003,384 frames, 2,571 episodes (levels 1-1 to 1-4), 5% held out |
+| Data | 1,003,384 frames at 15 fps, about 18.6 hours of random-policy play (2,571 episodes averaging 26 s, levels 1-1 to 1-4), 5% held out |
 | Tokenizer | 38.25 dB PSNR on held-out frames after 40k steps (5.3 it/s, batch 16, ~2 h) |
 | Dynamics | 148k steps (4.1 it/s, batch 8, ~10 h); 8-frame rollout latent MSE 0.016 vs 0.072 for copying the last frame |
 | Shorter run | 50k steps (~3.5 h) is nearly as good: rollout MSE stays at 0.014-0.025 (noisy, 32 sequences) from ~50k on, and video pixel error is about the same; the extra steps mainly strengthen the response to the jump button |
