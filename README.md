@@ -5,6 +5,8 @@ A from-scratch PyTorch implementation of the Dreamer 4 world model
 
 From a few real frames and a stream of controller actions, the model imagines the frames that follow.
 
+This is the world model only (tokenizer and dynamics). There is no agent: nothing here learns to play the game.
+
 ![Real game vs world model imagination](assets/mario_demo.gif)
 
 A held-out level 1-1 run. Left: the real game. Right: the world model, given only the first 8 real frames and then
@@ -67,7 +69,7 @@ Training resumes from the last checkpoint if you rerun the same command.
 | Tokenizer | 38.25 dB PSNR on held-out frames after 40k steps (5.3 it/s, batch 16, ~2 h) |
 | Dynamics | 148k steps (4.1 it/s, batch 8, ~10 h); 8-frame rollout latent MSE 0.016 vs 0.072 for copying the last frame |
 | Shorter run | 50k steps (~3.5 h) is nearly as good: rollout MSE stays at 0.014-0.025 (noisy, 32 sequences) from ~50k on, and video pixel error is about the same; the extra steps mainly strengthen the response to the jump button |
-| Generation | 4 steps per frame, faster than real time |
+| Generation | 4 steps per frame: 33 ms per frame including decoding (31 fps on the GPU, the game runs at 15 fps); 0.7 fps on CPU |
 
 From 8 real frames, rollouts track the real game for about 2-4 s, then continue as a plausible but different part
 of the level. One step at a time, the imagined screen scrolls at the real speed (1.51 vs 1.49 px per frame).
