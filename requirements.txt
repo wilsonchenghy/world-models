@@ -1,0 +1,10 @@
+# model, training and demo. torch needs a CUDA build: https://pytorch.org/get-started/locally/
+torch==2.7.1
+torchvision==0.22.1
+numpy==2.2.6
+lpips==0.1.4
+imageio==2.38.1
+imageio-ffmpeg==0.6.0
+pillow==12.3.0
+safetensors==0.8.0
+huggingface-hub==0.35.3

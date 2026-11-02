@@ -12,6 +12,16 @@ This is the world model only (tokenizer and dynamics). There is no agent: nothin
 A held-out level 1-1 run. Left: the real game. Right: the world model, given only the first 8 real frames and then
 the same button presses, imagining every frame after that. [Full-quality MP4](assets/mario_demo.mp4).
 
+## Try it
+
+Trained weights are on [Hugging Face](https://huggingface.co/wilsonchenghy/world-models-mario). This downloads them and
+a sample run, then writes a real vs imagined video (needs a CUDA GPU, no game or training):
+
+```bash
+pip install -r requirements.txt
+python -m envs.mario.demo demo.mp4
+```
+
 ## Layout
 
 ```
@@ -25,6 +35,7 @@ envs/mario/          Super Mario Bros data and evaluation
   collect.py         biased-random play, frame skip 4, 120x128
   pack.py            episodes -> packed train/eval arrays
   gen_video.py       real vs imagined video + A-vs-NOOP jump check
+  demo.py            one-command demo from the published weights
 ```
 
 `dreamer4/` reads one packed format, so a new environment only has to write it:
@@ -46,11 +57,11 @@ envs/mario/          Super Mario Bros data and evaluation
 Run everything from the repo root.
 
 ```bash
-# data (needs gym==0.23.1, gym-super-mario-bros, numpy<2): ~1M frames in ~10 min with 14 workers
+# data, in its own environment (pip install -r requirements-env.txt): ~1M frames in ~10 min with 14 workers
 python -m envs.mario.collect data/raw 1000000 14
 python -m envs.mario.pack data/raw data/packed
 
-# model (needs torch with CUDA, lpips, imageio)
+# model, with requirements.txt
 BATCH=16 python -m dreamer4.train_tok data/packed runs/mario 40000
 python -m dreamer4.encode data/packed runs/mario
 BATCH=8 SEQ=32 python -m dreamer4.train_dyn data/packed runs/mario 50000

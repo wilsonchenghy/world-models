@@ -1,0 +1,7 @@
+# Mario data collection: a separate environment, these conflict with requirements.txt (numpy<2, old gym)
+gym==0.23.1
+gym-super-mario-bros==7.4.0
+nes-py==8.2.1
+numpy==1.26.4
+opencv-python-headless==4.11.0.86
+setuptools==84.2.1
